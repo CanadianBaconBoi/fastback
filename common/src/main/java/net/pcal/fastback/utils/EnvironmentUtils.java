@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static net.pcal.fastback.logging.SystemLogger.syslog;
+import static net.pcal.fastback.mod.Mod.mod;
 import static net.pcal.fastback.utils.ProcessUtils.doExec;
 
 public class EnvironmentUtils {
@@ -32,11 +33,11 @@ public class EnvironmentUtils {
     }
 
     public static String getGitVersion() {
-        return execForVersion(new String[]{"git", "--version"});
+        return execForVersion(new String[]{mod().getGitExecutable().getAbsolutePath(), "--version"});
     }
 
     public static String getGitLfsVersion() {
-        return execForVersion(new String[]{"git-lfs", "--version"});
+        return execForVersion(new String[]{mod().getGitLfsExecutable().getAbsolutePath(), "--version"});
     }
 
     private static String execForVersion(String[] cmd) {

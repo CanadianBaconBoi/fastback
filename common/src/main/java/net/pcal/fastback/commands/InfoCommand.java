@@ -21,6 +21,7 @@ package net.pcal.fastback.commands;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.pcal.fastback.config.GitConfig;
 import net.pcal.fastback.config.GitConfigKey;
 import net.pcal.fastback.logging.UserLogger;
@@ -78,7 +79,7 @@ enum InfoCommand implements Command {
         requireNonNull(scs);
         try (final UserLogger ulog = ulog(scs)) {
             try {
-                final Text notInstalled = Text.translatable("fastback.values.not-installed");
+                final Text notInstalled = new TranslatableText("fastback.values.not-installed");
                 ulog.message(UserMessage.localized("fastback.chat.info-header"));
                 ulog.message(UserMessage.localized("fastback.chat.info-fastback-version", mod().getModVersion()));
                 ulog.message(raw("native git installed: " + EnvironmentUtils.isNativeGitInstalled())); //fixme i18n

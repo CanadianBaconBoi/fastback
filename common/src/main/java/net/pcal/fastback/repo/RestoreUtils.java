@@ -42,6 +42,7 @@ import static net.pcal.fastback.config.OtherConfigKey.REMOTE_PUSH_URL;
 import static net.pcal.fastback.logging.SystemLogger.syslog;
 import static net.pcal.fastback.logging.UserMessage.UserMessageStyle.ERROR;
 import static net.pcal.fastback.logging.UserMessage.UserMessageStyle.NATIVE_GIT;
+import static net.pcal.fastback.logging.UserMessage.UserMessageStyle.NORMAL;
 import static net.pcal.fastback.logging.UserMessage.localized;
 import static net.pcal.fastback.logging.UserMessage.styledLocalized;
 import static net.pcal.fastback.logging.UserMessage.styledRaw;
@@ -81,6 +82,7 @@ abstract class RestoreUtils {
             final Path allRestoresDir = conf.isSet(RESTORE_DIRECTORY) ?
                     Paths.get(conf.getString(RESTORE_DIRECTORY)) : mod().getDefaultRestoresDir();
             final Path restoreTargetDir = getTargetDir(allRestoresDir, mod().getWorldName(), sid.getShortName());
+            ulog.message(styledRaw("Begin restore backup to " + restoreTargetDir.toString(), NORMAL));
             if (conf.getBoolean(IS_NATIVE_GIT_ENABLED)) {
                 native_restoreSnapshot(sid.getBranchName(), restoreTargetDir, repoUri, ulog);
             } else {
@@ -99,22 +101,22 @@ abstract class RestoreUtils {
         final String restoreTargetDirStr = restoreTargetDir.toString();
         syslog().debug("Cloning repo at " + repoUri);
         ProcessUtils.doExec(new String[]{
-                "git", "clone", repoUri, "--no-checkout", "--branch", branchName, "--single-branch", restoreTargetDirStr
+                mod().getGitExecutable().getAbsolutePath(), "clone", repoUri, "--no-checkout", "--branch", branchName, "--single-branch", restoreTargetDirStr
         }, env, outputConsumer, outputConsumer);
         syslog().debug("Installing lfs locally in " + restoreTargetDirStr);
         ProcessUtils.doExec(new String[]{
-                "git", "-C", restoreTargetDirStr, "lfs", "install", "--local"
+                mod().getGitExecutable().getAbsolutePath(), "-C", restoreTargetDirStr, "lfs", "install", "--local"
         }, env, outputConsumer, outputConsumer);
         syslog().debug("Checking out " + branchName + ", downloading lfs blobs");
         ProcessUtils.doExec(new String[]{
-                "git", "-C", restoreTargetDirStr, "checkout", branchName
+                mod().getGitExecutable().getAbsolutePath(), "-C", restoreTargetDirStr, "checkout", branchName
         }, env, outputConsumer, outputConsumer);
     }
 
     private static void jgit_restoreSnapshot(final String branchName, final Path restoreTargetDir, final String repoUri, final UserLogger ulog) throws IOException, GitAPIException {
         ulog.update(localized("fastback.hud.restore-percent", 0));
         final ProgressMonitor pm = new JGitIncrementalProgressMonitor(new JGitRestoreProgressMonitor(ulog), 100);
-        try (Git git = Git.cloneRepository().setProgressMonitor(pm).setDirectory(restoreTargetDir.toFile()).
+        try (Git git = Git.cloneRepository().setTransportConfigCallback(mod().getTransportConfigCallback()).setProgressMonitor(pm).setDirectory(restoreTargetDir.toFile()).
                 setBranchesToClone(List.of("refs/heads/" + branchName)).setBranch(branchName).setURI(repoUri).call()) {
         }
         FileUtils.rmdir(restoreTargetDir.resolve(".git"));

@@ -18,18 +18,22 @@
 package net.pcal.fastback.mod;
 
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.pcal.fastback.commands.SchedulableAction;
 import net.pcal.fastback.config.GitConfig;
 import net.pcal.fastback.logging.UserLogger;
 import net.pcal.fastback.logging.UserMessage;
 import net.pcal.fastback.repo.Repo;
 import net.pcal.fastback.repo.RepoFactory;
+import net.pcal.fastback.repo.SshTransportConfigCallback;
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.transport.SshSessionFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Map;
+import java.nio.file.Paths;
+import java.util.*;
 
 import static java.nio.file.Files.createTempDirectory;
 import static java.util.Objects.requireNonNull;
@@ -45,9 +49,11 @@ class ModImpl implements LifecycleListener, Mod {
 
     // ======================================================================
     // Fields
-
     private final MinecraftProvider fsp;
     private Path tempRestoresDirectory = null;
+    private File gitExecutable = null;
+    private File gitLfsExecutable = null;
+    private TransportConfigCallback transportConfigCallback = null;
 
     // ======================================================================
     // Construction
@@ -109,6 +115,16 @@ class ModImpl implements LifecycleListener, Mod {
     }
 
     @Override
+    public void setHudTextForPlayer(UserMessage message, ServerPlayerEntity player) {
+        if (message == null) {
+            syslog().debug("null unexpectedly passed to setHudText, ignoring");
+            this.clearHudText();
+        } else {
+            this.fsp.setHudTextForPlayer(message, player);
+        }
+    }
+
+    @Override
     public void clearHudText() {
         this.fsp.clearHudText();
     }
@@ -126,6 +142,21 @@ class ModImpl implements LifecycleListener, Mod {
     @Override
     public void addBackupProperties(Map<String, String> props) {
         fsp.addBackupProperties(props);
+    }
+
+    @Override
+    public File getGitExecutable() {
+        return this.gitExecutable;
+    }
+
+    @Override
+    public File getGitLfsExecutable() {
+        return this.gitLfsExecutable;
+    }
+
+    @Override
+    public TransportConfigCallback getTransportConfigCallback() {
+        return this.transportConfigCallback;
     }
 
     @Override
@@ -147,6 +178,27 @@ class ModImpl implements LifecycleListener, Mod {
     @Override
     public void onInitialize() {
         {
+            ArrayList<String> paths = new ArrayList<>(Arrays.asList(System.getenv().get("PATH").split(File.pathSeparator)));
+            paths.add(Paths.get("", "bin").toAbsolutePath().toString());
+            for(String dirname : paths) {
+                File gitFile = new File(dirname, "git");
+                File gitLfsFile = new File(dirname, "git-lfs");
+
+                if(gitExecutable == null && gitFile.isFile()) {
+                    if(!gitFile.canExecute()) {
+                        gitFile.setExecutable(true);
+                    }
+                    gitExecutable = gitFile;
+                }
+                if(gitLfsExecutable == null && gitLfsFile.isFile()) {
+                    if(!gitLfsFile.canExecute()) {
+                        gitLfsFile.setExecutable(true);
+                    }
+                    gitLfsExecutable = gitLfsFile;
+                }
+            }
+        }
+        {
             final String gitVersion = getGitVersion();
             if (gitVersion == null) {
                 syslog().warn("git is not installed.");
@@ -166,6 +218,7 @@ class ModImpl implements LifecycleListener, Mod {
             syslog().warn("An ssh provider was not initialized for jgit.  Operations on a remote repo over ssh will fail.");
         } else {
             syslog().info("SshSessionFactory: " + SshSessionFactory.getInstance().toString());
+            this.transportConfigCallback = new SshTransportConfigCallback();
         }
         syslog().debug("onInitialize complete");
     }
@@ -211,6 +264,4 @@ class ModImpl implements LifecycleListener, Mod {
             syslog().debug("onWorldStop complete");
         }
     }
-
-
 }

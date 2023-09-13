@@ -9,6 +9,12 @@ architectury {
     forge()
 }
 
+loom {
+    forge {
+        mixinConfig "fastback.mixins.common.json"
+    }
+}
+
 shadowJar {
     //https://stackoverflow.com/questions/73286776/grpc-unsupportedaddresstypeexception-but-only-when-packaged-with-shadowjar
     // This does in fact make service discovery work when packaged; still doesn't work in the IDE.  see SshHacks.

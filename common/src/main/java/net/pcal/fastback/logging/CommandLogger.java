@@ -18,6 +18,7 @@
 
 package net.pcal.fastback.logging;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.server.command.ServerCommandSource;
 
 import static java.util.Objects.requireNonNull;
@@ -44,6 +45,10 @@ class CommandLogger implements UserLogger {
 
     @Override
     public void update(final UserMessage message) {
-        mod().setHudText(message);
+        try {
+            mod().setHudTextForPlayer(message, scs.getPlayer());
+        } catch (CommandSyntaxException e) {
+            mod().setHudText(message);
+        }
     }
 }

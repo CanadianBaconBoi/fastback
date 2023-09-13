@@ -20,10 +20,11 @@ package net.pcal.fastback.mod.fabric;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.world.level.LevelInfo;
@@ -34,6 +35,7 @@ import net.pcal.fastback.logging.SystemLogger;
 import net.pcal.fastback.logging.UserMessage;
 import net.pcal.fastback.mod.LifecycleListener;
 import net.pcal.fastback.mod.MinecraftProvider;
+import net.pcal.fastback.mod.Mod;
 import net.pcal.fastback.mod.fabric.mixins.ServerAccessors;
 import net.pcal.fastback.mod.fabric.mixins.SessionAccessors;
 import org.apache.logging.log4j.LogManager;
@@ -70,7 +72,7 @@ abstract class BaseFabricProvider implements MinecraftProvider, MixinGateway {
     @Override
     public void sendBroadcast(UserMessage userMessage) {
         if (this.minecraftServer != null && this.minecraftServer.isDedicated()) {
-            minecraftServer.getPlayerManager().broadcast(messageToText(userMessage), false);
+            minecraftServer.getPlayerManager().broadcast(messageToText(userMessage), MessageType.CHAT, Mod.EMPTYUUID);
         }
     }
 
@@ -105,7 +107,7 @@ abstract class BaseFabricProvider implements MinecraftProvider, MixinGateway {
     public Path getWorldDirectory() {
         if (this.minecraftServer == null) throw new IllegalStateException();
         final LevelStorage.Session session = ((ServerAccessors) this.minecraftServer).getSession();
-        return ((SessionAccessors) session).getDirectory().path();
+        return ((SessionAccessors) session).getDirectory();
     }
 
     @Override
@@ -137,7 +139,7 @@ abstract class BaseFabricProvider implements MinecraftProvider, MixinGateway {
             }
             Collections.sort(modList);
             final StringBuilder modListProp = new StringBuilder();
-            for (final String mod : modList) modListProp.append(mod + ", ");
+            for (final String mod : modList) modListProp.append(mod).append(", ");
             props.put("fabric-mods", modListProp.toString());
         } catch (Exception ohwell) {
             syslog().error(ohwell);
@@ -195,7 +197,7 @@ abstract class BaseFabricProvider implements MinecraftProvider, MixinGateway {
             final int requiredLevel = this.isClient() ? 0 : 4;
             return Permissions.require(permName, requiredLevel);
         });
-        CommandRegistrationCallback.EVENT.register((dispatcher, regAccess, env) -> dispatcher.register(backupCommand));
+        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> dispatcher.register(backupCommand));
         syslog().debug("registered backup command");
         MixinGateway.Singleton.register(this);
         lifecycle.onInitialize();

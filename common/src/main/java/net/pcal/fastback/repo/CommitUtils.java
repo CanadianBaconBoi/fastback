@@ -123,19 +123,19 @@ abstract class CommitUtils {
         final File worktree = repo.getWorkTree();
         final Map<String, String> env = Map.of("GIT_LFS_FORCE_PROGRESS", "1");
         final Consumer<String> outputConsumer = line -> ulog.update(styledRaw(line, NATIVE_GIT));
-        String[] checkout = {"git", "-C", worktree.getAbsolutePath(), "checkout", "--orphan", newBranchName};
+        String[] checkout = {mod().getGitExecutable().getAbsolutePath(), "-C", worktree.getAbsolutePath(), "checkout", "--orphan", newBranchName};
         try {
             doExec(checkout, env, outputConsumer, outputConsumer);
             mod().setWorldSaveEnabled(false);
             try {
-                String[] add = {"git", "-C", worktree.getAbsolutePath(), "add", "-v", "."};
+                String[] add = {mod().getGitExecutable().getAbsolutePath(), "-C", worktree.getAbsolutePath(), "add", "-v", "."};
                 doExec(add, env, outputConsumer, outputConsumer);
             } finally {
                 mod().setWorldSaveEnabled(true);
                 syslog().debug("World save re-enabled.");
             }
             {
-                String[] commit = {"git", "-C", worktree.getAbsolutePath(), "commit", "-m", newBranchName};
+                String[] commit = {mod().getGitExecutable().getAbsolutePath(), "-C", worktree.getAbsolutePath(), "commit", "-m", newBranchName};
                 doExec(commit, env, outputConsumer, outputConsumer);
             }
         } catch (ProcessException e) {

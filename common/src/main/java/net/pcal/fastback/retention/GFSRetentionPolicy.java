@@ -69,7 +69,7 @@ class GFSRetentionPolicy implements RetentionPolicy {
         final LocalDate oneMonthAgo = now.minus(Period.ofDays(30));
         Integer currentDay = null, currentWeek = null, currentMonth = null;
         List<SnapshotId> sortedDesending = new ArrayList<>(snapshots);
-        Collections.sort(sortedDesending, Collections.reverseOrder());
+        sortedDesending.sort(Collections.reverseOrder());
         for (final SnapshotId sid : sortedDesending) {
             final LocalDate snapshotDate = sid.getDate().toInstant().atZone(TimeZone.getDefault().toZoneId()).toLocalDate();
             if (snapshotDate.isAfter(gracePeriodStart)) {

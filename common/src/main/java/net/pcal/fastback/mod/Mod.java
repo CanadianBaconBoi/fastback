@@ -19,12 +19,16 @@
 package net.pcal.fastback.mod;
 
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.pcal.fastback.logging.UserMessage;
+import org.eclipse.jgit.api.TransportConfigCallback;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.UUID;
 
 import static java.util.Objects.requireNonNull;
 
@@ -35,6 +39,7 @@ import static java.util.Objects.requireNonNull;
  * @since 0.1.0
  */
 public interface Mod {
+    UUID EMPTYUUID = new UUID(0L, 0L);
 
     static Mod mod() {
         return Singleton.INSTANCE;
@@ -81,6 +86,11 @@ public interface Mod {
     void setHudText(UserMessage message);
 
     /**
+     * Set magical floating text for player.  You MUST call clearHudText
+     */
+    void setHudTextForPlayer(UserMessage message, ServerPlayerEntity player);
+
+    /**
      * Remove the magical floating text.
      */
     void clearHudText();
@@ -104,6 +114,21 @@ public interface Mod {
      * Add extra properties that will be stored in .fastback/backup.properties.
      */
     void addBackupProperties(Map<String, String> props);
+
+    /**
+     * @return file pointing to git executable
+     */
+    File getGitExecutable();
+
+    /**
+     * @return file pointing to git-lfs executable
+     */
+    File getGitLfsExecutable();
+
+    /**
+     * @return JGit transport config callback
+     */
+    TransportConfigCallback getTransportConfigCallback();
 
     class Singleton {
         private static Mod INSTANCE = null;

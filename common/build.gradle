@@ -6,9 +6,15 @@ architectury {
 
 dependencies {
     // "you can't include dependencies in common gradle projects"
+    // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies
+    // Do NOT use other classes from fabric loader
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
 
     // JGit
     compileOnly("org.eclipse.jgit:org.eclipse.jgit:${project.jgit_version}") { transitive = false }
+    compileOnly("org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:${project.jgit_version}") { transitive = false }
+    compileOnly("com.jcraft:jsch:0.1.55") { transitive = false }
 
     // JUnit
     testImplementation ('junit:junit:4.13.1') { transitive = false } //KILL?

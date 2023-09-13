@@ -46,20 +46,17 @@ class ExecutorImpl implements Executor {
         requireNonNull(lock, "lock");
         if (this.executor == null) throw new IllegalStateException("Executor not started");
         switch (lock) {
-            case NONE:
-            case WRITE_CONFIG: // revisit this
-                this.executor.submit(runnable);
-                break;
-            case WRITE:
+            case NONE, WRITE_CONFIG -> // revisit this
+                    this.executor.submit(runnable);
+            case WRITE -> {
                 if (this.exclusiveFuture != null && !this.exclusiveFuture.isDone()) {
                     ulog.message(styledLocalized("fastback.chat.thread-busy", ERROR));
                 } else {
                     syslog().debug("executing " + runnable);
                     this.exclusiveFuture = this.executor.submit(runnable);
                 }
-                break;
-            default:
-                throw new IllegalStateException();
+            }
+            default -> throw new IllegalStateException();
         }
     }
 

@@ -18,8 +18,10 @@
 
 package net.pcal.fastback.mod.fabric;
 
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.pcal.fastback.logging.UserMessage;
+import net.pcal.fastback.mod.MinecraftProvider;
 
 import java.nio.file.Path;
 
@@ -44,6 +46,11 @@ public class FabricServerProvider extends BaseFabricProvider {
     }
 
     @Override
+    public void setHudTextForPlayer(UserMessage userMessage, ServerPlayerEntity player) {
+        player.sendMessage(MinecraftProvider.messageToText(userMessage), true);
+    }
+
+    @Override
     public void clearHudText() {
 
     }
@@ -54,7 +61,7 @@ public class FabricServerProvider extends BaseFabricProvider {
     }
 
     @Override
-    public void renderMessageScreen(DrawContext drawContext, float tickDelta) {
+    public void renderMessageScreen(MatrixStack matrixStack, float tickDelta) {
 
     }
 }

@@ -48,6 +48,7 @@ import static net.pcal.fastback.logging.UserMessage.UserMessageStyle.NATIVE_GIT;
 import static net.pcal.fastback.logging.UserMessage.raw;
 import static net.pcal.fastback.logging.UserMessage.styledLocalized;
 import static net.pcal.fastback.logging.UserMessage.styledRaw;
+import static net.pcal.fastback.mod.Mod.mod;
 import static net.pcal.fastback.repo.PushUtils.isTempBranch;
 import static net.pcal.fastback.utils.ProcessUtils.doExec;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
@@ -76,7 +77,7 @@ abstract class ReclamationUtils {
 
     private static void native_doLfsPrune(RepoImpl repo, UserLogger ulog) throws ProcessException {
         final File worktree = repo.getWorkTree();
-        final String[] push = {"git", "-C", worktree.getAbsolutePath(), "-c", "lfs.pruneoffsetdays=999999", "lfs", "prune", "--verbose", "--no-verify-remote",};
+        final String[] push = {mod().getGitExecutable().getAbsolutePath(), "-C", worktree.getAbsolutePath(), "-c", "lfs.pruneoffsetdays=999999", "lfs", "prune", "--verbose", "--no-verify-remote",};
         final Consumer<String> outputConsumer = line->ulog.update(styledRaw(line, NATIVE_GIT));
         doExec(push, Collections.emptyMap(), outputConsumer, outputConsumer);
         syslog().debug("native_doLfsPrune");
@@ -136,7 +137,7 @@ abstract class ReclamationUtils {
         gc.gc(); // TODO progress monitor
         syslog().debug("Garbage collection complete.");
         syslog().debug("Stats after gc:");
-        syslog().debug("" + repo.getJGit().gc().getStatistics());
+        syslog().debug(String.valueOf(repo.getJGit().gc().getStatistics()));
         final long sizeAfterBytes = sizeOfDirectory(gitDir);
         syslog().info("Backup size after gc: " + byteCountToDisplaySize(sizeAfterBytes));
     }

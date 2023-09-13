@@ -58,6 +58,7 @@ import static net.pcal.fastback.logging.UserMessage.UserMessageStyle.JGIT;
 import static net.pcal.fastback.logging.UserMessage.UserMessageStyle.NATIVE_GIT;
 import static net.pcal.fastback.logging.UserMessage.styledLocalized;
 import static net.pcal.fastback.logging.UserMessage.styledRaw;
+import static net.pcal.fastback.mod.Mod.mod;
 import static net.pcal.fastback.utils.ProcessUtils.doExec;
 
 /**
@@ -82,7 +83,7 @@ abstract class PushUtils {
                 return;
             }
             final Git jgit = repo.getJGit();
-            final Collection<Ref> remoteBranchRefs = jgit.lsRemote().setHeads(true).setTags(false).
+            final Collection<Ref> remoteBranchRefs = jgit.lsRemote().setTransportConfigCallback(mod().getTransportConfigCallback()).setHeads(true).setTags(false).
                     setRemote(conf.getString(REMOTE_NAME)).call();
             final ListMultimap<WorldId, SnapshotId> snapshotsPerWorld =
                     SnapshotIdUtils.getSnapshotsPerWorld(remoteBranchRefs, repo.getSidCodec());
@@ -124,7 +125,7 @@ abstract class PushUtils {
         final File worktree = repo.getWorkTree();
         final GitConfig conf = repo.getConfig();
         String remoteName = conf.getString(REMOTE_NAME);
-        final String[] push = {"git", "-C", worktree.getAbsolutePath(), "-c", "push.autosetupremote=false", "push", "--progress", "--set-upstream", remoteName, branchNameToPush};
+        final String[] push = {mod().getGitExecutable().getAbsolutePath(), "-C", worktree.getAbsolutePath(), "-c", "push.autosetupremote=false", "push", "--progress", "--set-upstream", remoteName, branchNameToPush};
         final Map<String, String> env = Map.of("GIT_LFS_FORCE_PROGRESS", "1");
         final Consumer<String> outputConsumer = line->log.update(styledRaw(line, NATIVE_GIT));
         doExec(push, env, outputConsumer, outputConsumer);
@@ -136,7 +137,7 @@ abstract class PushUtils {
         final ProgressMonitor pm = new JGitIncrementalProgressMonitor(new JGitPushProgressMonitor(ulog), 100);
         final String remoteName = conf.getString(REMOTE_NAME);
         syslog().info("Doing simple push of " + branchNameToPush);
-        jgit.push().setProgressMonitor(pm).setRemote(remoteName).
+        jgit.push().setTransportConfigCallback(mod().getTransportConfigCallback()).setProgressMonitor(pm).setRemote(remoteName).
                 setRefSpecs(new RefSpec(branchNameToPush + ":" + branchNameToPush)).call();
     }
 
@@ -199,7 +200,7 @@ abstract class PushUtils {
             jgit.checkout().setName(branchNameToPush).call();
             syslog().debug("Pushing temp branch " + tempBranchName);
             final ProgressMonitor pm = new JGitIncrementalProgressMonitor(new JGitPushProgressMonitor(ulog), 100);
-            final Iterable<PushResult> pushResult = jgit.push().setProgressMonitor(pm).setRemote(remoteName).
+            final Iterable<PushResult> pushResult = jgit.push().setTransportConfigCallback(mod().getTransportConfigCallback()).setProgressMonitor(pm).setRemote(remoteName).
                     setRefSpecs(new RefSpec(tempBranchName + ":" + tempBranchName),
                             new RefSpec(branchNameToPush + ":" + branchNameToPush)).call();
             syslog().debug("Cleaning up branches...");
@@ -225,7 +226,7 @@ abstract class PushUtils {
                 final String remoteTempBranch = "refs/heads/" + tempBranchName;
                 syslog().debug("Deleting remote temp branch " + remoteTempBranch);
                 final RefSpec deleteRemoteBranchSpec = new RefSpec().setSource(null).setDestination(remoteTempBranch);
-                jgit.push().setProgressMonitor(pm).setRemote(remoteName).setRefSpecs(deleteRemoteBranchSpec).call();
+                jgit.push().setTransportConfigCallback(mod().getTransportConfigCallback()).setProgressMonitor(pm).setRemote(remoteName).setRefSpecs(deleteRemoteBranchSpec).call();
             }
             syslog().info("Push complete");
         } catch (GitAPIException e) {

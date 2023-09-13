@@ -95,12 +95,8 @@ class RepoImpl implements Repo {
         final SnapshotId newSid;
         try {
             newSid = CommitUtils.doCommitSnapshot(this, ulog);
-        } catch(IOException ioe) {
+        } catch(IOException | ProcessException ioe) {
             syslog().error(ioe);
-            ulog.message(styledLocalized("fastback.chat.commit-failed", ERROR));
-            return;
-        } catch (ProcessException e) {
-            syslog().error(e);
             ulog.message(styledLocalized("fastback.chat.commit-failed", ERROR));
             return;
         }
@@ -127,13 +123,9 @@ class RepoImpl implements Repo {
         final SnapshotId newSid;
         try {
             newSid = CommitUtils.doCommitSnapshot(this, ulog);
-        } catch(IOException ioe) {
+        } catch(IOException | ProcessException ioe) {
             ulog.message(styledLocalized("fastback.chat.commit-failed", ERROR));
             syslog().error(ioe);
-            return;
-        } catch (ProcessException e) {
-            ulog.message(styledLocalized("fastback.chat.commit-failed", ERROR));
-            syslog().error(e);
             return;
         }
         ulog.message(localized("fastback.chat.backup-complete-elapsed", getDuration(start)));
@@ -226,7 +218,7 @@ class RepoImpl implements Repo {
         final String remoteName = conf.getString(REMOTE_NAME);
         final JGitSupplier<Collection<Ref>> refProvider = () -> {
             try {
-                return jgit.lsRemote().setRemote(remoteName).setHeads(true).call();
+                return jgit.lsRemote().setTransportConfigCallback(mod().getTransportConfigCallback()).setRemote(remoteName).setHeads(true).call();
             } catch (GitAPIException e) {
                 throw new IOException(e);
             }

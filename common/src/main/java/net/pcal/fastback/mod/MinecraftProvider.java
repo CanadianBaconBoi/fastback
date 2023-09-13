@@ -19,9 +19,8 @@
 package net.pcal.fastback.mod;
 
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.*;
 import net.pcal.fastback.logging.UserMessage;
 
 import java.nio.file.Path;
@@ -97,6 +96,12 @@ public interface MinecraftProvider {
     void setHudText(UserMessage userMessage);
 
     /**
+     * Display ephemeral status text on the screen to the user,.  This could be part of the in-game HUD
+     * or any other floating text, depending on what screen the user is on.  Has no effect if we're serverside.
+     */
+    void setHudTextForPlayer(UserMessage userMessage, ServerPlayerEntity player);
+
+    /**
      * Remove text set by setHudText.
      */
     void clearHudText();
@@ -129,7 +134,7 @@ public interface MinecraftProvider {
         if (message.style() == ERROR) {
             scs.sendError(messageToText(message));
         } else {
-            scs.sendFeedback(() -> messageToText(message), false);
+            scs.sendFeedback(messageToText(message), false);
         }
     }
 
@@ -139,29 +144,17 @@ public interface MinecraftProvider {
     static Text messageToText(final UserMessage m) {
         final MutableText out;
         if (m.localized() != null) {
-            out = Text.translatable(m.localized().key(), m.localized().params());
+            out = new TranslatableText(m.localized().key(), m.localized().params());
         } else {
-            out = Text.literal(m.raw());
+            out = new LiteralText(m.raw());
         }
         switch(m.style()) {
-            case ERROR -> {
-                out.setStyle(EMPTY.withColor(TextColor.parse("red")));
-            }
-            case WARNING -> {
-                out.setStyle(EMPTY.withColor(TextColor.parse("yellow")));
-            }
-            case JGIT -> {
-                out.setStyle(EMPTY.withColor(TextColor.parse("gray")));
-            }
-            case NATIVE_GIT -> {
-                out.setStyle(EMPTY.withColor(TextColor.parse("green")));
-            }
-            case BROADCAST -> {
-                out.setStyle(EMPTY.withItalic(true));
-            }
-            default -> {
-                out.setStyle(EMPTY.withColor(TextColor.parse("white")));
-            }
+            case ERROR -> out.setStyle(EMPTY.withColor(TextColor.parse("red")));
+            case WARNING -> out.setStyle(EMPTY.withColor(TextColor.parse("yellow")));
+            case JGIT -> out.setStyle(EMPTY.withColor(TextColor.parse("gray")));
+            case NATIVE_GIT -> out.setStyle(EMPTY.withColor(TextColor.parse("green")));
+            case BROADCAST -> out.setStyle(EMPTY.withItalic(true));
+            default -> out.setStyle(EMPTY.withColor(TextColor.parse("white")));
         }
         return out;
     }

@@ -9,7 +9,6 @@
     "SessionAccessors"
   ],
   "client": [
-    "MessageScreenMixin",
     "ScreenAccessors"
   ],
   "injectors": {

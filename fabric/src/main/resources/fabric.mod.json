@@ -22,12 +22,13 @@
     ]
   },
   "mixins": [
-    "fastback.mixins.json"
+    "fastback.mixins.json",
+    "fastback.mixins.common.json"
   ],
   "depends": {
     "fabricloader": ">=0.11.3",
     "fabric": "*",
-    "minecraft": "1.20.x",
+    "minecraft": "1.18.2",
     "java": ">=17"
   },
   "conflicts": {}

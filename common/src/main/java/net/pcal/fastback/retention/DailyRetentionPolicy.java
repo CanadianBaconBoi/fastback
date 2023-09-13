@@ -65,7 +65,7 @@ class DailyRetentionPolicy implements RetentionPolicy {
         final List<SnapshotId> toPrune = new ArrayList<>();
         LocalDate previousDate = null;
         List<SnapshotId> sortedDesending = new ArrayList<>(snapshots);
-        Collections.sort(sortedDesending, Collections.reverseOrder());
+        sortedDesending.sort(Collections.reverseOrder());
         for (final SnapshotId sid : sortedDesending) {
             final LocalDate currentDate = sid.getDate().toInstant().atZone(TimeZone.getDefault().toZoneId()).toLocalDate();
             if (previousDate != null) {

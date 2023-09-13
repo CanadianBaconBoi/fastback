@@ -32,6 +32,7 @@ import static net.pcal.fastback.config.FastbackConfigKey.IS_NATIVE_GIT_ENABLED;
 import static net.pcal.fastback.config.FastbackConfigKey.UPDATE_GITATTRIBUTES_ENABLED;
 import static net.pcal.fastback.config.FastbackConfigKey.UPDATE_GITIGNORE_ENABLED;
 import static net.pcal.fastback.logging.SystemLogger.syslog;
+import static net.pcal.fastback.mod.Mod.mod;
 import static net.pcal.fastback.utils.FileUtils.writeResourceToFile;
 import static net.pcal.fastback.utils.ProcessUtils.doExec;
 
@@ -82,7 +83,7 @@ abstract class PreflightUtils {
         if (EnvironmentUtils.isNativeGitInstalled()) {
             final boolean isNativeEnabled = repo.getConfig().getBoolean(IS_NATIVE_GIT_ENABLED);
             final String action = isNativeEnabled ? "install" : "uninstall";
-            final String[] cmd = {"git", "-C", repo.getWorkTree().getAbsolutePath(), "lfs", action, "--local"};
+            final String[] cmd = {mod().getGitExecutable().getAbsolutePath(), "-C", repo.getWorkTree().getAbsolutePath(), "lfs", action, "--local"};
             doExec(cmd, Collections.emptyMap(), s -> {}, s -> {});
         }
     }

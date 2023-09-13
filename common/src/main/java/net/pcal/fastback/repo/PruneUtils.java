@@ -40,6 +40,7 @@ import static net.pcal.fastback.config.FastbackConfigKey.REMOTE_NAME;
 import static net.pcal.fastback.logging.SystemLogger.syslog;
 import static net.pcal.fastback.logging.UserMessage.UserMessageStyle.ERROR;
 import static net.pcal.fastback.logging.UserMessage.styledLocalized;
+import static net.pcal.fastback.mod.Mod.mod;
 
 /**
  * Utils for pruning and deleting snapshot branches.
@@ -54,7 +55,7 @@ abstract class PruneUtils {
                 .setSource(null)
                 .setDestination("refs/heads/" + remoteBranchName);
         try {
-            repo.getJGit().push().setRefSpecs(refSpec).setRemote(repo.getConfig().getString(REMOTE_NAME)).call();
+            repo.getJGit().push().setTransportConfigCallback(mod().getTransportConfigCallback()).setRefSpecs(refSpec).setRemote(repo.getConfig().getString(REMOTE_NAME)).call();
         } catch (GitAPIException e) {
             throw new IOException(e);
         }

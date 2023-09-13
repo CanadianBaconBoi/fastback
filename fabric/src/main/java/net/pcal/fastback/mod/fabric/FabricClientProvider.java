@@ -21,12 +21,10 @@ package net.pcal.fastback.mod.fabric;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.MessageScreen;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.pcal.fastback.logging.UserMessage;
-import net.pcal.fastback.mod.fabric.mixins.ScreenAccessors;
 
 import java.nio.file.Path;
 
@@ -63,8 +61,8 @@ final class FabricClientProvider extends BaseFabricProvider implements HudRender
     // MixinGateway implementation
 
     @Override
-    public void renderMessageScreen(DrawContext drawContext, float tickDelta) {
-        onHudRender(drawContext, tickDelta);
+    public void renderMessageScreen(MatrixStack matrixStack, float tickDelta) {
+        onHudRender(matrixStack, tickDelta);
     }
 
     // ====================================================================
@@ -86,6 +84,11 @@ final class FabricClientProvider extends BaseFabricProvider implements HudRender
     }
 
     @Override
+    public void setHudTextForPlayer(UserMessage userMessage, ServerPlayerEntity player) {
+
+    }
+
+    @Override
     public void clearHudText() {
         this.hudText = null;
         // TODO someday it might be nice to bring back the fading text effect.  But getting to it properly
@@ -94,10 +97,7 @@ final class FabricClientProvider extends BaseFabricProvider implements HudRender
 
     @Override
     public void setMessageScreenText(UserMessage userMessage) {
-        final Screen screen = client.currentScreen;
-        if (screen instanceof MessageScreen) {
-            ((ScreenAccessors) screen).setTitle(messageToText(userMessage));
-        }
+        client.player.sendMessage(messageToText(userMessage), true);
     }
 
     @Override
@@ -107,17 +107,17 @@ final class FabricClientProvider extends BaseFabricProvider implements HudRender
 
     // ====================================================================
     // HudRenderCallback implementation
-
     @Override
-    public void onHudRender(DrawContext drawContext, float tickDelta) {
+    public void onHudRender(MatrixStack matrixStack, float tickDelta) {
         if (this.hudText == null) return;
-        if (!this.client.options.getShowAutosaveIndicator().getValue()) return;
+        if (!this.client.options.showAutosaveIndicator) return;
         if (System.currentTimeMillis() - this.hudTextTime > TEXT_TIMEOUT) {
             // Don't leave it sitting up there forever if we fail to call clearHudText()
             this.hudText = null;
             syslog().debug("hud text timed out.  somebody forgot to clean up");
             return;
         }
-        drawContext.drawTextWithShadow(this.client.textRenderer, this.hudText, 2, 2, 1);
+        client.player.sendMessage(this.hudText, true);
+        //DrawableHelper.drawTextWithShadow(matrixStack, this.client.textRenderer, this.hudText, 2, 2, 1);
     }
 }

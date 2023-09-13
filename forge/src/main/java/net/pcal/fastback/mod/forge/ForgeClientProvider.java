@@ -1,10 +1,10 @@
 package net.pcal.fastback.mod.forge;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -52,12 +52,12 @@ final class ForgeClientProvider extends ForgeCommonProvider {
         this.onInitialize();
     }
 
-    private void onGuiOverlayEvent(RenderGuiOverlayEvent.Post event) {
-        this.renderOverlayText(event.getGuiGraphics());
+    private void onGuiOverlayEvent(RenderGameOverlayEvent.Post event) {
+        this.renderOverlayText(event.getMatrixStack());
     }
 
-    private void onScreenRenderEvent(ScreenEvent.Render.Post event) {
-        this.renderOverlayText(event.getGuiGraphics());
+    private void onScreenRenderEvent(ScreenEvent.DrawScreenEvent.Post event) {
+        this.renderOverlayText(event.getPoseStack());
     }
 
     // ======================================================================
@@ -79,6 +79,10 @@ final class ForgeClientProvider extends ForgeCommonProvider {
     }
 
     @Override
+    public void setHudTextForPlayer(UserMessage userMessage, ServerPlayerEntity player) {
+    }
+
+    @Override
     public void clearHudText() {
         this.hudText = null;
         // TODO someday it might be nice to bring back the fading text effect.  But getting to it properly
@@ -89,12 +93,13 @@ final class ForgeClientProvider extends ForgeCommonProvider {
     public void setMessageScreenText(UserMessage userMessage) {
         final Text text = messageToText(userMessage);
         this.hudText = text;
-        final Screen screen = client.currentScreen;
-        if (screen != null) screen.title = text;
+        client.player.sendMessage(text, true);
+//        final Screen screen = client.currentScreen;
+//        if (screen != null) screen.title = text;
     }
 
     @Override
-    void renderOverlayText(final DrawContext drawContext) {
+    void renderOverlayText(final MatrixStack matrixStack) {
         if (this.hudText == null) return;
         // if (!this.client.options.getShowAutosaveIndicator().getValue()) return; FIXME
         if (System.currentTimeMillis() - this.hudTextTime > TEXT_TIMEOUT) {
@@ -104,7 +109,8 @@ final class ForgeClientProvider extends ForgeCommonProvider {
             return;
         }
         if (client != null) {
-            drawContext.drawTextWithShadow(this.client.textRenderer, this.hudText, 2, 2, 1);
+            client.player.sendMessage(this.hudText, true);
+//            DrawableHelper.drawTextWithShadow(matrixStack, this.client.textRenderer, this.hudText, 2, 2, 1);
         }
     }
 }

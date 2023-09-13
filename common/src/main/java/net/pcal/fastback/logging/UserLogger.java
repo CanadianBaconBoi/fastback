@@ -20,6 +20,7 @@ package net.pcal.fastback.logging;
 
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.command.ServerCommandSource;
+import net.pcal.fastback.logging.ShutdownLogger;
 
 import static net.pcal.fastback.logging.SystemLogger.syslog;
 import static net.pcal.fastback.logging.UserMessage.UserMessageStyle.ERROR;

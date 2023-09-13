@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,10 @@ public class ProcessUtils {
         syslog().debug("Executing " + String.join(" ", args));
         final Map<String, String> env = new HashMap<>(envOriginal);
         env.putAll(System.getenv());
+        env.put("PATH", env.containsKey("PATH") ?
+                Paths.get("", "bin").toAbsolutePath() + ":" + env.get("PATH")
+                : Paths.get("", "bin").toAbsolutePath().toString()
+        );
         // output a few values that are important for debugging; don't indiscriminately dump everything or someone's going
         // to end up uploading a bunch of passwords into pastebin.
         syslog().debug("PATH: " + env.get("PATH"));

@@ -2,9 +2,11 @@ package net.pcal.fastback.mod.forge;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.level.LevelInfo;
 import net.minecraft.world.level.storage.LevelStorage;
@@ -20,6 +22,7 @@ import net.pcal.fastback.logging.SystemLogger;
 import net.pcal.fastback.logging.UserMessage;
 import net.pcal.fastback.mod.LifecycleListener;
 import net.pcal.fastback.mod.MinecraftProvider;
+import net.pcal.fastback.mod.Mod;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
@@ -123,6 +126,11 @@ class ForgeCommonProvider implements MinecraftProvider {
     }
 
     @Override
+    public void setHudTextForPlayer(UserMessage userMessage, ServerPlayerEntity player) {
+        player.sendMessage(messageToText(userMessage), true);
+    }
+
+    @Override
     public void clearHudText() {
     }
 
@@ -130,7 +138,7 @@ class ForgeCommonProvider implements MinecraftProvider {
     public void setMessageScreenText(UserMessage userMessage) {
     }
 
-    void renderOverlayText(DrawContext drawContext) {
+    void renderOverlayText(MatrixStack drawContext) {
     }
 
     @Override
@@ -148,8 +156,7 @@ class ForgeCommonProvider implements MinecraftProvider {
     public Path getWorldDirectory() {
         if (this.logicalServer == null) throw new IllegalStateException("minecraftServer is null");
         final LevelStorage.Session session = logicalServer.session;
-        Path out = session.getWorldDir().toAbsolutePath().normalize();
-        return out;
+        return session.getWorldDir().toAbsolutePath().normalize();
     }
 
     @Override
@@ -168,7 +175,7 @@ class ForgeCommonProvider implements MinecraftProvider {
     @Override
     public void sendBroadcast(UserMessage userMessage) {
         if (this.logicalServer != null && this.logicalServer.isDedicated()) {
-            logicalServer.getPlayerManager().broadcast(messageToText(userMessage), false);
+            logicalServer.getPlayerManager().broadcast(messageToText(userMessage), MessageType.CHAT, Mod.EMPTYUUID);
         }
     }
 
