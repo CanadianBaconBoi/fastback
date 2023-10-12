@@ -20,6 +20,7 @@ package net.pcal.fastback.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.dedicated.command.SaveAllCommand;
 import net.pcal.fastback.logging.UserLogger;
 
 import java.io.IOException;

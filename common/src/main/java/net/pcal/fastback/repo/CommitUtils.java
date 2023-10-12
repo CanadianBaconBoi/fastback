@@ -128,7 +128,7 @@ abstract class CommitUtils {
             doExec(checkout, env, outputConsumer, outputConsumer);
             mod().setWorldSaveEnabled(false);
             try {
-                String[] add = {mod().getGitExecutable().getAbsolutePath(), "-C", worktree.getAbsolutePath(), "add", "-v", "."};
+                String[] add = {mod().getGitExecutable().getAbsolutePath(), "-C", worktree.getAbsolutePath(), "add", "."};
                 doExec(add, env, outputConsumer, outputConsumer);
             } finally {
                 mod().setWorldSaveEnabled(true);

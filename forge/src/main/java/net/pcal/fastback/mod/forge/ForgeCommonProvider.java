@@ -169,7 +169,7 @@ class ForgeCommonProvider implements MinecraftProvider {
     @Override
     public void saveWorld() {
         if (this.logicalServer == null) throw new IllegalStateException();
-        this.logicalServer.saveAll(false, true, true); // suppressLogs, flush, force
+        this.logicalServer.saveAll(true, true, true); // suppressLogs, flush, force
     }
 
     @Override

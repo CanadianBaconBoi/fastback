@@ -33,6 +33,7 @@ import static net.pcal.fastback.mod.Mod.mod;
 class CommandLogger implements UserLogger {
 
     private final ServerCommandSource scs;
+    private String lastMessage = "";
 
     CommandLogger(final ServerCommandSource scs) {
         this.scs = requireNonNull(scs);
@@ -45,10 +46,15 @@ class CommandLogger implements UserLogger {
 
     @Override
     public void update(final UserMessage message) {
-        try {
-            mod().setHudTextForPlayer(message, scs.getPlayer());
-        } catch (CommandSyntaxException e) {
-            mod().setHudText(message);
+        if (scs.getEntity() != null) {
+            try {
+                mod().setHudTextForPlayer(message, scs.getPlayer());
+            } catch (CommandSyntaxException e) {
+                mod().setHudText(message);
+            }
+        } else if (lastMessage == null || !lastMessage.equals(message.raw())) {
+            mod().sendChat(message, this.scs);
+            lastMessage = message.raw();
         }
     }
 }

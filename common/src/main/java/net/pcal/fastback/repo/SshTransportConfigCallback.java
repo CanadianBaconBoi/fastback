@@ -28,7 +28,6 @@ public class SshTransportConfigCallback implements TransportConfigCallback {
             JSch jSch = super.createDefaultJSch(fs);
             jSch.removeAllIdentity();
             jSch.addIdentity(Paths.get("",".ssh","id_rsa").toAbsolutePath().toString());
-            jSch.addIdentity(Paths.get(System.getProperty("user.home"),".ssh","id_rsa").toAbsolutePath().toString());
             return jSch;
         }
     };
